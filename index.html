@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>TRY FOR A THINK</title>
+  </head>
+  <body style="background:rgb(100,100,100);">
+    <div style="text-align:center; position:relative;" id=",m">
+      <canvas width="500px" height="500px" style="position: absolute; margin-left: -250px" id="c"></canvas>
+      <div width="500px" height="500px" style="position: relative; right: -50%; margin-left: -250px" id="b"></div>
+      <script>
+        var won = true;
+        const SIZE = [10,2];
+        const SIZER = 50;
+        const PSIZER = [20,(SIZER-20)/2];//pipe thickness outline
+        const QSIZER = [10,(SIZER-10)/2,1];//pipe thickness filling
+        const canvas = document.getElementById("c");
+        const buttondiv = document.getElementById("b");
+        //const maindiv = document.getElementById("m");
+        const d = canvas.getContext("2d");
+        const ways = [[0,-1],[1,0],[0,1],[-1,0]];
+        const grid = [];//TO NOT FROM !
+        const start = [0,0];
+        const ends = [];
+        var grid2;
+        function a(){let z=[];for (let x=0;x<SIZE[1];x++){z.push([false,false,false,false])};return z;}
+        //for (let y=0;y<SIZE[1];y++){grid.push(a());}
+        function ran(n){return Math.floor(Math.random()*n)}
+        function g(f,x,y){
+          if (f!=-1){grid[x][y][f]=true}
+          grid2[x][y]=true;
+          let z=[];
+          for (let w=0;w<4;w++){
+            if (x+ways[w][0]>-1 && y+ways[w][1]>-1 && x+ways[w][0]<SIZE[0] && y+ways[w][1]<SIZE[1]){
+              z.push(w);
+            }
+          }
+          while (z.length>0){
+            way=z.splice(ran(z.length),1)[0];
+            if (!grid2[x+ways[way][0]][y+ways[way][1]]){
+              grid[x][y][way]=true;
+              g((way+2)%4,x+ways[way][0],y+ways[way][1]);
+            }
+          }
+          if (grid[x][y][0]+grid[x][y][1]+grid[x][y][2]+grid[x][y][3]==1){
+            ends.push([x,y]);
+          }
+        }
+        function generate(){
+          grid.splice(0,grid.length);
+          ends.splice(0,ends.length);
+          for (let y=0;y<SIZE[0];y++){grid.push(a());}
+          start[0]=ran(SIZE[0]);
+          start[1]=ran(SIZE[1]);
+          grid2=[];
+          for (let y=0;y<SIZE[0];y++){grid2.push(b());}// FIND A BETTER WAYYYYY!!!!!
+          g(-1,start[0],start[1]);
+        }
+        function scramble(){
+          for (let x=0;x<SIZE[0];x++){
+            for (let y=0;y<SIZE[1];y++){
+              let n=ran(4);
+              for (let z=0;z<n;z++){
+                rot(x,y);
+              }
+            }
+          }
+        }
+        function setup(){
+          for (let x=0;x<SIZE[0];x++){
+            for (let y=0;y<SIZE[1];y++){
+              let btn = document.createElement("button");
+              btn.innerHTML = "Cli";
+              btn.style.position="absolute";
+              btn.style.background="rgba(0,0,0,0)";
+              btn.style.border="none";
+              btn.style.width=SIZER+"px";
+              btn.style.height=SIZER+"px";
+              btn.style.left=x*SIZER+"px";
+              btn.style.top=y*SIZER+"px";
+              btn.onclick=function(){
+                if (!won){
+                  go(x,y);
+                }
+              };
+              buttondiv.appendChild(btn);
+            }
+          }
+          generate();
+          scramble();
+          won = false;
+          show();
+        }
+        function go(x,y){
+          rot(x,y);
+          show();
+        }
+        function rot(x,y){
+          let temp=grid[x][y][3];
+          grid[x][y][3]=grid[x][y][2];
+          grid[x][y][2]=grid[x][y][1];
+          grid[x][y][1]=grid[x][y][0];
+          grid[x][y][0]=temp;
+        }
+        function flow(x,y){
+          for (let w=0;w<4;w++){
+            if (grid[x][y][w]){
+              if (x+ways[w][0]>-1 && y+ways[w][1]>-1 && x+ways[w][0]<SIZE[0] && y+ways[w][1]<SIZE[1]){
+                if (!grid2[x+ways[w][0]][y+ways[w][1]]){
+                  if (grid[x+ways[w][0]][y+ways[w][1]][(w+2)%4]){
+                    grid2[x+ways[w][0]][y+ways[w][1]]=true;
+                    flow(x+ways[w][0],y+ways[w][1]);
+                  }
+                }
+              }
+            }
+          }
+        }
+        function b(){let z=[];for (let x=0;x<SIZE[1];x++){z.push(false)};return z;}
+        function show(){
+          grid2=[];
+          for (let y=0;y<SIZE[0];y++){grid2.push(b());}// FIND A BETTER WAYYYYY!!!!!
+          grid2[start[0]][start[1]]=true;
+          flow(start[0],start[1]);
+          d.fillStyle = "rgb(100,100,100)";
+          d.fillRect(0, 0, SIZER*SIZE[0], SIZER*SIZE[1]);
+          for (let x=0;x<SIZE[0];x++){
+            for (let y=0;y<SIZE[1];y++){
+              d.fillStyle = 'black';
+              d.fillRect(x*SIZER+PSIZER[1],y*SIZER+PSIZER[1],PSIZER[0],PSIZER[0]);
+              if (grid[x][y][0]){d.fillRect(x*SIZER+PSIZER[1],y*SIZER,PSIZER[0],PSIZER[1]);}
+              if (grid[x][y][1]){d.fillRect(x*SIZER+PSIZER[0]+PSIZER[1],y*SIZER+PSIZER[1],PSIZER[1],PSIZER[0]);}
+              if (grid[x][y][2]){d.fillRect(x*SIZER+PSIZER[1],y*SIZER+PSIZER[0]+PSIZER[1],PSIZER[0],PSIZER[1]);}
+              if (grid[x][y][3]){d.fillRect(x*SIZER,y*SIZER+PSIZER[1],PSIZER[1],PSIZER[0]);}
+              d.fillStyle = grid2[x][y]?'lightblue':'grey';
+              d.fillRect(x*SIZER+QSIZER[1],y*SIZER+QSIZER[1],QSIZER[0],QSIZER[0]);
+              if (grid[x][y][0]){d.fillRect(x*SIZER+QSIZER[1],y*SIZER+QSIZER[2],QSIZER[0],QSIZER[1]-QSIZER[2]);}
+              if (grid[x][y][1]){d.fillRect(x*SIZER+QSIZER[0]+QSIZER[1],y*SIZER+QSIZER[1],QSIZER[1]-QSIZER[2],QSIZER[0]);}
+              if (grid[x][y][2]){d.fillRect(x*SIZER+QSIZER[1],y*SIZER+QSIZER[0]+QSIZER[1],QSIZER[0],QSIZER[1]-QSIZER[2]);}
+              if (grid[x][y][3]){d.fillRect(x*SIZER+QSIZER[2],y*SIZER+QSIZER[1],QSIZER[1]-QSIZER[2],QSIZER[0]);}
+              if (ends.some(a => [x,y].every((v, i) => v === a[i]))){
+                d.fillStyle = 'red';
+                d.fillRect(x*SIZER+PSIZER[1],y*SIZER+PSIZER[1],PSIZER[0],PSIZER[0]);
+              }
+              if (x==start[0]&&y==start[1]){
+                d.fillStyle = 'blue';
+                d.fillRect(x*SIZER+PSIZER[1],y*SIZER+PSIZER[1],PSIZER[0],PSIZER[0]);
+              }
+            }
+          }
+          if (grid2.reduce((a, b) => a + b.reduce((c, d) => c + d, 0), 0)==SIZE[0]*SIZE[1]){//.every()?
+            console.log('WINNER ?? ?!? ? ??! ??');
+            won = true;
+            againbtn=document.createElement("button");
+            againbtn.innerHTML = "PLAY AGAIN";
+            againbtn.id = "againbtn";
+            againbtn.style.background="rgba(180,80,90,255)";
+            againbtn.onclick=function(){
+              document.getElementById("againbtn").remove();
+              setup();
+            };
+            buttondiv.appendChild(againbtn);
+          }
+        }
+        setup();
+      </script>
+    </div>
+  </body>
+</html>
